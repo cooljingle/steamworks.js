@@ -2,6 +2,15 @@ export function init(appId: number): void
 export function runCallbacks(): void
 export namespace achievement {
   export function activate(achievement: string): boolean
+  export function isActivated(achievement: string): boolean
+}
+export namespace auth {
+  /** @param timeoutSeconds - The number of seconds to wait for the ticket to be validated. Default value is 10 seconds. */
+  export function getSessionTicket(timeoutSeconds?: number | undefined | null): Promise<Ticket>
+  export class Ticket {
+    cancel(): void
+    getBytes(): Buffer
+  }
 }
 export namespace cloud {
   export function isEnabledForAccount(): boolean
@@ -22,7 +31,6 @@ export namespace input {
   export function getAnalogAction(actionName: string): bigint
   export function shutdown(): void
   export class Controller {
-    handle: bigint
     activateActionSet(actionSetHandle: bigint): void
     isDigitalActionPressed(actionHandle: bigint): boolean
     getAnalogActionVector(actionHandle: bigint): AnalogActionVector
@@ -39,6 +47,7 @@ export namespace localplayer {
   export function getLevel(): number
   /** @returns the 2 digit ISO 3166-1-alpha-2 format country code which client is running in, e.g. "US" or "UK". */
   export function getIpCountry(): string
+  export function setRichPresence(key: string, value?: string | undefined | null): void
 }
 export namespace stats {
   export function getInt(name: string): number | null
