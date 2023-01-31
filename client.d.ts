@@ -1,8 +1,30 @@
 export function init(appId: number): void
+export function restartAppIfNecessary(appId: number): boolean
 export function runCallbacks(): void
+export interface PlayerSteamId {
+  steamId64: string
+  steamId32: string
+  accountId: number
+}
 export namespace achievement {
   export function activate(achievement: string): boolean
   export function isActivated(achievement: string): boolean
+}
+export namespace apps {
+  export function isSubscribedApp(appId: number): boolean
+  export function isAppInstalled(appId: number): boolean
+  export function isDlcInstalled(appId: number): boolean
+  export function isSubscribedFromFreeWeekend(): boolean
+  export function isVacBanned(): boolean
+  export function isCybercafe(): boolean
+  export function isLowViolence(): boolean
+  export function isSubscribed(): boolean
+  export function appBuildId(): number
+  export function appInstallDir(appId: number): string
+  export function appOwner(): PlayerSteamId
+  export function availableGameLanguages(): Array<string>
+  export function currentGameLanguage(): string
+  export function currentBetaName(): string | null
 }
 export namespace auth {
   /** @param timeoutSeconds - The number of seconds to wait for the ticket to be validated. Default value is 10 seconds. */
@@ -12,12 +34,29 @@ export namespace auth {
     getBytes(): Buffer
   }
 }
+export namespace callback {
+  export const enum SteamCallback {
+    PersonaStateChange = 0,
+    SteamServersConnected = 1,
+    SteamServersDisconnected = 2,
+    SteamServerConnectFailure = 3,
+    LobbyDataUpdate = 4,
+    LobbyChatUpdate = 5,
+    P2PSessionRequest = 6,
+    P2PSessionConnectFail = 7
+  }
+  export function register<C extends keyof import('./callbacks').CallbackReturns>(steamCallback: C, handler: (value: import('./callbacks').CallbackReturns[C]) => void): Handle
+  export class Handle {
+    disconnect(): void
+  }
+}
 export namespace cloud {
   export function isEnabledForAccount(): boolean
   export function isEnabledForApp(): boolean
   export function readFile(name: string): string
   export function writeFile(name: string, content: string): boolean
   export function deleteFile(name: string): boolean
+  export function fileExists(name: string): boolean
 }
 export namespace input {
   export interface AnalogActionVector {
@@ -37,17 +76,77 @@ export namespace input {
   }
 }
 export namespace localplayer {
-  export interface LocalSteamId {
-    steamId64: string
-    steamId32: string
-    accountId: number
-  }
-  export function getSteamId(): LocalSteamId
+  export function getSteamId(): PlayerSteamId
   export function getName(): string
   export function getLevel(): number
   /** @returns the 2 digit ISO 3166-1-alpha-2 format country code which client is running in, e.g. "US" or "UK". */
   export function getIpCountry(): string
   export function setRichPresence(key: string, value?: string | undefined | null): void
+}
+export namespace matchmaking {
+  export const enum LobbyType {
+    Private = 0,
+    FriendsOnly = 1,
+    Public = 2,
+    Invisible = 3
+  }
+  export function createLobby(lobbyType: LobbyType, maxMembers: number): Promise<Lobby>
+  export function joinLobby(lobbyId: bigint): Promise<Lobby>
+  export function getLobbies(): Promise<Array<Lobby>>
+  export class Lobby {
+    id: bigint
+    join(): Promise<Lobby>
+    leave(): void
+    openInviteDialog(): void
+    getMemberCount(): bigint
+    getMemberLimit(): bigint | null
+    getMembers(): Array<PlayerSteamId>
+    getOwner(): PlayerSteamId
+    setJoinable(joinable: boolean): boolean
+    getData(key: string): string | null
+    setData(key: string, value: string): boolean
+    deleteData(key: string): boolean
+    /** Get an object containing all the lobby data */
+    getFullData(): Record<string, string>
+    /** Merge current lobby data with provided data in a single batch */
+    mergeFullData(data: Record<string, string>): boolean
+  }
+}
+export namespace networking {
+  export interface P2PPacket {
+    data: Buffer
+    size: number
+    steamId: PlayerSteamId
+  }
+  /** The method used to send a packet */
+  export const enum SendType {
+    /**
+     * Send the packet directly over udp.
+     *
+     * Can't be larger than 1200 bytes
+     */
+    Unreliable = 0,
+    /**
+     * Like `Unreliable` but doesn't buffer packets
+     * sent before the connection has started.
+     */
+    UnreliableNoDelay = 1,
+    /**
+     * Reliable packet sending.
+     *
+     * Can't be larger than 1 megabyte.
+     */
+    Reliable = 2,
+    /**
+     * Like `Reliable` but applies the nagle
+     * algorithm to packets being sent
+     */
+    ReliableWithBuffering = 3
+  }
+  export function sendP2PPacket(steamId64: string, sendType: SendType, data: Buffer): boolean
+  export function isP2PPacketAvailable(): number
+  export function readP2PPacket(size: number): P2PPacket
+  export function acceptP2PSession(steamId64: string): void
 }
 export namespace stats {
   export function getInt(name: string): number | null

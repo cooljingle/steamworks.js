@@ -1,5 +1,6 @@
 use napi::bindgen_prelude::Error;
 use napi_derive::napi;
+use steamworks::AppId;
 use steamworks::Client;
 
 pub mod client;
@@ -10,7 +11,15 @@ extern crate lazy_static;
 #[napi]
 pub fn init(app_id: u32) -> Result<(), Error> {
     if client::has_client() {
-        return Ok(());
+        let initialized_app_id = client::get_client().utils().app_id().0;
+        if initialized_app_id != app_id {
+            return Err(Error::from_reason(format!(
+                "Client already initialized for app id {}",
+                app_id
+            )));
+        } else {
+            return Ok(());
+        }
     }
 
     let result = Client::init_app(app_id);
@@ -24,6 +33,11 @@ pub fn init(app_id: u32) -> Result<(), Error> {
         }
         Err(e) => Err(Error::from_reason(e.to_string())),
     }
+}
+
+#[napi]
+pub fn restart_app_if_necessary(app_id: u32) -> bool {
+    steamworks::restart_app_if_necessary(AppId(app_id))
 }
 
 #[napi_derive::napi]

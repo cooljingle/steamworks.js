@@ -1,28 +1,39 @@
 {
     "name": "steamworks.js",
-    "version": "0.0.18",
+    "version": "0.0.28",
     "main": "index.js",
+    "types": "index.d.ts",
     "napi": {
         "name": "steamworksjs"
     },
     "files": [
         "dist/*",
         "index.js",
-        "client.d.ts",
+        "*.d.ts",
         "README.md"
     ],
     "license": "MIT",
     "devDependencies": {
-        "@napi-rs/cli": "2.10.0",
-        "rimraf": "3.0.2"
+        "@napi-rs/cli": "2.14.4",
+        "rimraf": "4.1.2",
+        "typescript": "4.9.4",
+        "electron": "22.1.0"
+    },
+    "dependencies": {
+        "@types/node": "*"
     },
     "engines": {
         "node": ">= 14"
     },
     "scripts": {
-        "build": "node build --release",
+        "build": "node build --release && npm run types",
         "build:debug": "node build",
         "prune": "rimraf dist target client.d.ts",
-        "format": "cargo fmt"
+        "format": "cargo fmt",
+        "types": "tsc index.js --allowJs --declaration --emitDeclarationOnly"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ceifa/steamworks.js"
     }
 }

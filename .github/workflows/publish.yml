@@ -13,10 +13,10 @@ jobs:
         os: [windows-2022, ubuntu-18.04, macos-11]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup Node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: 16.x
 
@@ -39,7 +39,7 @@ jobs:
         npm run build
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: OS specific binaries
         path: dist
@@ -52,13 +52,17 @@ jobs:
     needs: build
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Download build
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: OS specific binaries
         path: dist
+        
+    - name: Include M1 build
+      run: |
+        mv ./build/osx/steamworksjs.darwin-arm64.node ./dist/osx/
 
     - name: Log files
       run: |
